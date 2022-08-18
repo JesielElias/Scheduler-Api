@@ -3,6 +3,7 @@ using Scheduler.Api.Models;
 using Scheduler.Api.ObjectValue;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.Core.Objects;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -62,7 +63,7 @@ namespace Scheduler.Api.Repositories
         {
             var rooms = await _context
                 .Rooms
-                .Include(r=> r.Events)
+                .Include(r => r.Events)
                 .ToListAsync();
             var ret = new List<RoomVO>();
             rooms.ForEach(room =>
@@ -71,7 +72,9 @@ namespace Scheduler.Api.Repositories
                     {
                         Id = room.Id,
                         Name = room.Name,
-                        Scheduling = room.Events.Where(e => e.EndDate > System.DateTime.Now).ToList().Count > 0
+                        Scheduling = room
+                        .Events
+                        .Count > 0
                     })
             );
             return ret;
@@ -79,18 +82,22 @@ namespace Scheduler.Api.Repositories
 
         public async Task<RoomVO> Room(int idRoom)
         {
+            var teste = System.DateTime.UtcNow;
             var room = await _context
                 .Rooms
                 .Where(r=> r.Id == idRoom)
                 .Include(r => r.Events)
                 .FirstOrDefaultAsync();
             if (room != null)
-            { 
+            {
                 return new RoomVO()
                 {
                     Id = room.Id,
                     Name = room.Name,
-                    Scheduling = room.Events.Where(e => e.EndDate > System.DateTime.Now).ToList().Count > 0
+                    Scheduling =
+                        room
+                        .Events
+                        .Count > 0
                 };
             }
             return null;
